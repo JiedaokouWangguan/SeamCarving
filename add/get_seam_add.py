@@ -107,5 +107,5 @@ def get_seams(num_of_seams):
     cv2.destroyAllWindows()
 
 
-get_seams(300)
+get_seams(150)
 
