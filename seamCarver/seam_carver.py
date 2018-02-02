@@ -4,14 +4,22 @@ import time
 
 
 class SeamCarver(object):
-    def __init__(self, src, dst, rate):
+    def __init__(self, src, dst, rate_insert, rate_remove):
         self.src = src
         self.dst = dst
-        self.rate = rate
+        if rate_remove <= 0.0 or rate_remove >= 1.0 or rate_insert <= 0.0 or rate_insert >= 1.0:
+            print("The value of rate is illegal. Legal value:(0, 1)")
+            return
+        self.rate_insert = rate_insert
+        self.rate_remove = rate_remove
 
     def set_pic(self, src, dst):
         self.src = src
         self.dst = dst
+
+    def set_rate(self, rate_insert, rate_remove):
+        self.rate_insert = rate_insert
+        self.rate_remove = rate_remove
 
     def get_rows_cols(self):
         pic = cv2.imread(self.src, 0)
@@ -31,6 +39,9 @@ class SeamCarver(object):
         """
         time_begin = time.time()
         pic = cv2.imread(self.src, 1)
+        if pic is None:
+            print("can't open file:{}.".format(self.src))
+            return
         rows, cols = pic.shape[:2]
         diff_rows = tgt_height - rows
         diff_cols = tgt_width - cols
@@ -39,16 +50,17 @@ class SeamCarver(object):
 
         while diff_rows != 0 or diff_cols != 0:
             rows, cols = pic.shape[:2]
-            gradient = self.laplacian(pic, True, 3)
             dp_hori = np.array([])
             dp_hori_back = np.array([])
             dp_verti = np.array([])
             dp_verti_back = np.array([])
             if diff_rows != 0:
-                dp_hori, dp_hori_back = self.dp_horizontal(gradient, invalid_value)
+                gradient_hori = self.laplacian(pic, True, 3) if diff_rows > 0 else self.sobel(pic, 3)
+                dp_hori, dp_hori_back = self.dp_horizontal(gradient_hori, invalid_value)
 
             if diff_cols != 0:
-                dp_verti, dp_verti_back = self.dp_vertical(gradient, invalid_value)
+                gradient_verti = self.laplacian(pic, True, 3) if diff_cols > 0 else self.sobel(pic, 3)
+                dp_verti, dp_verti_back = self.dp_vertical(gradient_verti, invalid_value)
 
             cost_hori = -1
             cost_verti = -1
@@ -62,7 +74,8 @@ class SeamCarver(object):
                 index = np.arange(0, rows)
                 tuples = list(zip(index, last_col))
                 sorted_tuples = sorted(tuples, key=lambda x: x[1])
-                num_rows_delete = abs(int(diff_rows * self.rate)) + 1
+                rate = self.rate_insert if diff_rows > 0 else self.rate_remove
+                num_rows_delete = abs(int(diff_rows * rate)) + 1
                 rows_modify = np.zeros((num_rows_delete, cols), dtype='int16')
                 rows_modify[:, :] = -1
                 index_sorted_tuples = 0
@@ -105,7 +118,8 @@ class SeamCarver(object):
                 index = np.arange(0, cols)
                 tuples = list(zip(index, last_row))
                 sorted_tuples = sorted(tuples, key=lambda x: x[1])
-                num_cols_delete = abs(int(diff_cols * self.rate)) + 1
+                rate = self.rate_insert if diff_cols > 0 else self.rate_remove
+                num_cols_delete = abs(int(diff_cols * rate)) + 1
                 cols_modify = np.zeros((rows, num_cols_delete), dtype='int16')
                 cols_modify[:, :] = -1
                 index_sorted_tuples = 0
@@ -133,8 +147,8 @@ class SeamCarver(object):
                             dp_verti_back[row - 1][index_cur_col + 1] = invalid_value
                             index_cur_col = index_cur_col + 1
 
-                        cols_modify[row - 1][
-                            index_cols_modify] = index_cur_col - 1  # index_cur_col is 1-based while col_delete is 0-based
+                        cols_modify[row - 1][index_cols_modify] = index_cur_col - 1
+                        # index_cur_col is 1-based while col_delete is 0-based
 
                     if cols_modify[rows - 1][index_cols_modify] != -1:
                         index_cols_modify += 1
@@ -142,7 +156,7 @@ class SeamCarver(object):
                     index_sorted_tuples += 1
                 cost_verti = 0
                 for i in range(0, index_cols_modify):
-                    cost_verti += last_row[cols_modify[rows-1][i] + 1]
+                    cost_verti += last_row[cols_modify[rows - 1][i] + 1]
 
             if cost_verti != -1 and cost_hori != -1:
                 if cost_hori < cost_verti:
@@ -211,8 +225,6 @@ class SeamCarver(object):
             for row in range(0, rows):
                 count = 0
                 for col in range(0, cols):
-                    if col + count == 588:
-                        sdf = 1
                     new_pic[row][col + count] = pic[row][col]
 
                     if col in col_delete[row]:
