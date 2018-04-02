@@ -1,5 +1,7 @@
 from seamCarver.seam_carver import SeamCarver
 
-sc = SeamCarver("painting.jpg", "modified_painting.jpg", 0.6, 0.4)
+sc = SeamCarver("pic.png", "modified_pic.png", 0.27, 0.65)
 rows, cols = sc.get_rows_cols()
-pic = sc.carve(rows+50, cols + 300)
+# pic = sc.carve(rows, cols - 200)
+# sc.remove_obj(False, True)
+pic = sc.maintain_obj(rows, cols - 350)

@@ -233,8 +233,8 @@ class SeamCarver(object):
     def draw_circle(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             self.drawing = True
-            for i in range(-10, 10):
-                for j in range(-10, 10):
+            for i in range(-5, 5):
+                for j in range(-5, 5):
                     self.points.append((x+i, y+j))
                     self.tmp_pic[y+j][x+i][0] = 0
                     self.tmp_pic[y+j][x+i][1] = 0
@@ -242,8 +242,8 @@ class SeamCarver(object):
 
         elif event == cv2.EVENT_MOUSEMOVE:
             if self.drawing:
-                for i in range(-10, 10):
-                    for j in range(-10, 10):
+                for i in range(-5, 5):
+                    for j in range(-5, 5):
                         self.points.append((x+i, y+j))
                         self.tmp_pic[y+j][x+i][0] = 0
                         self.tmp_pic[y+j][x+i][1] = 0
@@ -455,20 +455,20 @@ class SeamCarver(object):
                     # index_cur_row is 1-based while row_delete is 0-based
 
                     for col in range(cols - 1, 0, -1):
-                        min_value = min(dp_hori_back[index_cur_row - 1][col - 1], dp_hori_back[index_cur_row][col - 1],
-                                        dp_hori_back[index_cur_row + 1][col - 1])
+                        min_value = min(dp_hori[index_cur_row - 1][col - 1], dp_hori[index_cur_row][col - 1],
+                                        dp_hori[index_cur_row + 1][col - 1])
                         if min_value == invalid_value:
                             rows_modify[index_rows_modify, :] = -1
                             break
 
-                        if dp_hori_back[index_cur_row - 1][col - 1] == min_value:
-                            dp_hori_back[index_cur_row - 1][col - 1] = invalid_value
+                        if dp_hori[index_cur_row - 1][col - 1] == min_value:
+                            dp_hori[index_cur_row - 1][col - 1] = invalid_value
                             index_cur_row = index_cur_row - 1
-                        elif dp_hori_back[index_cur_row][col - 1] == min_value:
-                            dp_hori_back[index_cur_row][col - 1] = invalid_value
+                        elif dp_hori[index_cur_row][col - 1] == min_value:
+                            dp_hori[index_cur_row][col - 1] = invalid_value
                             index_cur_row = index_cur_row
-                        elif dp_hori_back[index_cur_row + 1][col - 1] == min_value:
-                            dp_hori_back[index_cur_row + 1][col - 1] = invalid_value
+                        elif dp_hori[index_cur_row + 1][col - 1] == min_value:
+                            dp_hori[index_cur_row + 1][col - 1] = invalid_value
                             index_cur_row = index_cur_row + 1
 
                         rows_modify[index_rows_modify][
@@ -499,21 +499,21 @@ class SeamCarver(object):
                     # index_cur_col is 1-based while col_delete is 0-based
 
                     for row in range(rows - 1, 0, -1):
-                        min_value = min(dp_verti_back[row - 1][index_cur_col - 1],
-                                        dp_verti_back[row - 1][index_cur_col],
-                                        dp_verti_back[row - 1][index_cur_col + 1])
+                        min_value = min(dp_verti[row - 1][index_cur_col - 1],
+                                        dp_verti[row - 1][index_cur_col],
+                                        dp_verti[row - 1][index_cur_col + 1])
                         if min_value == invalid_value:
                             cols_modify[:, index_cols_modify] = -1
                             break
 
-                        if dp_verti_back[row - 1][index_cur_col - 1] == min_value:
-                            dp_verti_back[row - 1][index_cur_col - 1] = invalid_value
+                        if dp_verti[row - 1][index_cur_col - 1] == min_value:
+                            dp_verti[row - 1][index_cur_col - 1] = invalid_value
                             index_cur_col = index_cur_col - 1
-                        elif dp_verti_back[row - 1][index_cur_col] == min_value:
-                            dp_verti_back[row - 1][index_cur_col] = invalid_value
+                        elif dp_verti[row - 1][index_cur_col] == min_value:
+                            dp_verti[row - 1][index_cur_col] = invalid_value
                             index_cur_col = index_cur_col
-                        elif dp_verti_back[row - 1][index_cur_col + 1] == min_value:
-                            dp_verti_back[row - 1][index_cur_col + 1] = invalid_value
+                        elif dp_verti[row - 1][index_cur_col + 1] == min_value:
+                            dp_verti[row - 1][index_cur_col + 1] = invalid_value
                             index_cur_col = index_cur_col + 1
 
                         cols_modify[row - 1][index_cols_modify] = index_cur_col - 1
